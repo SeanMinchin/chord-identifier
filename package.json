@@ -1,0 +1,15 @@
+{
+    "name": "guitar-chord-erudite",
+    "description": "",
+    "version": "1.0.0",
+    "main": "index.js",
+    "scripts": {
+        "start": "tsc --project tsconfig.json && node dist/index.js"
+    },
+    "repository": {
+        "type": "git"
+    },
+    "keywords": [],
+    "author": "Sean Minchin",
+    "license": "MIT"
+}
