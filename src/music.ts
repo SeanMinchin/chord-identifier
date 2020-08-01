@@ -83,11 +83,17 @@ class Chord {
     return this._name;
   }
 
-  addNewInterval(interval: Interval) {
+  addNewInterval(interval: Interval): void {
     this._intervals.add(interval);
   }
 
-  fillExtensionNotes(remainingNotes: Map<number, Array<string>>) {
+  sortNoteNames = (first: string, second: string): -1 | 0 | 1 => {
+    if(first[0] === 'b' || second[0] === '#' || first === '7') return -1;
+    if(first[0] === '#' || second[0] === 'b' || first === 'maj7') return 1;
+    throw new Error('Invalid labels');
+  }
+
+  fillExtensionNotes(remainingNotes: Map<number, Array<string>>): void {
     remainingNotes.forEach((labels, name) => {
 
     });
@@ -98,24 +104,24 @@ class Chord {
       remainingNotes.delete(lowestInterval);
 
       switch(labels.length) {
-        case(3): // case: b2, 2, #2
-          this._name += 'add(b9, 9, #9)';
-          break;
+        case(3):
         case(2):
-          labels.sort((first: string, second: string) => {
-            if(first[0] === 'b' || second[0] === '#' || first === '7') return -1;
-            if(first[0] === '#' || second[0] === 'b' || first === 'maj7') return 1;
-            throw new Error('Invalid labels');
+          let tempName = [...'add('];
+          labels.sort(this.sortNoteNames).forEach((label) => {
+            tempName = [...tempName, `${label},`];
           });
-          this._name += `add(${labels[0]}, ${labels[1]})`
+          tempName[tempName.length - 1] = ')';
+          this._name = tempName.toString();
           break;
         case(1):
-          this._name += labels[0] === 'b' || labels[0] === '#' ? `add(${labels[0]})` : `add${labels[0]}`;
+          const extensionNoteName = labels[0];
+          this._name += extensionNoteName[0] === 'b' || extensionNoteName[0] === '#' ? `add(${extensionNoteName})` : `add${extensionNoteName}`;
+          break;
       }
     }
   }
 
-  handleExtensionNotes(isMajorChord: boolean, isPowerChord: boolean = false) {
+  handleExtensionNotes(isMajorChord: boolean, isPowerChord: boolean = false): void {
     const {
       MINOR_SECOND, MAJOR_SECOND,
       MINOR_THIRD,
@@ -141,7 +147,9 @@ class Chord {
       [MAJOR_SIXTH, { value: 13, name: '13'}]
     ]);
 
-    const extensionNotes: Map<number, Array<string>> = new Map([
+    type ExtensionNoteInterval = 7 | 9 | 11 | 13;
+
+    const extensionNotes: Map<ExtensionNoteInterval, Array<string>> = new Map([
       [7, []],
       [9, []],
       [11, []],
@@ -149,36 +157,94 @@ class Chord {
     ]);
 
     this._intervals.forEach((interval) => {
+      if(interval === MINOR_THIRD && !isMajorChord) return;
       const pair: NoteValueNamePair | undefined = nameLookup.get(interval);
       if(pair !== undefined) {
-        const { value, name } = pair;
+        const { name } = pair;
+        const value = <ExtensionNoteInterval> pair.value;
         extensionNotes.set(value, [...(extensionNotes.get(value) ?? []), name])
       }
     });
 
     console.log(extensionNotes);
 
-    const labels: Array<Array<string>> = Array.from(extensionNotes.values());
-
     // case: no extension notes or sevenths
-    if(!labels.some((label) => label.length > 0)) return;
+    if(!(Array.from(extensionNotes.values()).some((label) => label.length > 0))) return;
 
     // case: seventh(s) present
-    const sevenths = extensionNotes.get(7);
-    if(sevenths !== undefined) {
-      extensionNotes.delete(7);
-
+    const sevenths = extensionNotes.get(7) ?? [];
+    extensionNotes.delete(7);
+    if(sevenths.length !== 0) {
       if(isPowerChord) this._name += 'add';
 
       // case: min7 and maj7
       if(sevenths.length === 2) {
         this._name += '(7, maj7)';
         this.fillExtensionNotes(extensionNotes);
+        return;
       }
+
+      // case: either min7 or maj7
+      while(extensionNotes.size > 0) {
+        const lowestInterval = <ExtensionNoteInterval> Math.min(...extensionNotes.keys());
+        const nextLowestIntervalLabels = extensionNotes.get(lowestInterval) ?? [];
+        extensionNotes.delete(lowestInterval);
+
+        if(nextLowestIntervalLabels.length === 0) continue;
+
+        if(sevenths[0] === 'maj7') this._name += 'maj';
+  
+        switch(nextLowestIntervalLabels.length) {
+          case(3):
+          case(2):
+            let tempName = ['('];
+            nextLowestIntervalLabels.sort(this.sortNoteNames).forEach((label) => {
+              tempName = [...tempName, `${label},`];
+            });
+            tempName[tempName.length - 1] = ')';
+            this._name = tempName.toString();
+            break;
+          case(1):
+            const noteName = nextLowestIntervalLabels[0];
+            this._name += noteName.length > 1 ? `(${noteName})` : noteName;
+            break;
+        }
+
+        this.fillExtensionNotes(extensionNotes);
+        return;
+      }
+
+      // case: no extension notes
+      this._name += !isMajorChord && this._intervals.has(MINOR_THIRD) && sevenths[0] === 'maj7' ? 'maj7' : sevenths[0];
+      return;
     }
+
+    // case: no sevenths present, but sixth(s) are
+    const sixths = extensionNotes.get(13) ?? [];
+    extensionNotes.delete(13);
+    if(sixths.length !== 0) {
+      if(isPowerChord) this._name += 'add';
+
+      // case: min6 and maj6
+      switch(sixths.length) {
+        case(2):
+          this._name += '(min6, 6)';
+          break;
+        case(1):
+          const sixthName = sixths[0];
+          this._name += !isMajorChord && this._intervals.has(MINOR_THIRD) && sixthName === 'b13' ? '(min6)' : sixthName;
+          break;
+      }
+
+      this.fillExtensionNotes(extensionNotes);
+      return;
+    }
+
+    // case: no sevenths or sixths
+    this.fillExtensionNotes(extensionNotes);
   }
 
-  handleSuspendedNotes() {
+  handleSuspendedNotes(): void {
     const {
       MINOR_SECOND, MAJOR_SECOND,
       PERFECT_FOURTH, TRITONE,
@@ -193,12 +259,42 @@ class Chord {
     }
   }
 
-  handleDiminished() {
+  handleDiminished(): void {
+    const {
+      MAJOR_SIXTH, MINOR_SEVENTH, MAJOR_SEVENTH
+    } = Interval;
 
+    const dimFifthIsRoot = this._intervals.has(MINOR_SEVENTH) && this._intervals.has(MAJOR_SEVENTH);
+    const dimSeventhIsRoot = this._intervals.has(MAJOR_SIXTH) && (this._intervals.has(MINOR_SEVENTH) || this._intervals.has(MAJOR_SEVENTH));
+
+    if(dimFifthIsRoot || dimSeventhIsRoot) {
+      this._prob = -1;
+      return;
+    }
+
+    if(this._intervals.has(MAJOR_SIXTH)) { // dim7 chord
+      this._intervals.delete(MAJOR_SIXTH);
+      this._name += '°7';
+      this.handleExtensionNotes(false);
+    } else if(this._intervals.has(MINOR_SEVENTH)) { // m7b5 chord
+      this._name += 'm';
+      this.handleExtensionNotes(false);
+      this._name += '(b5)'
+    } else { // dim chord with no 7ths
+      this._name += '°';
+      this.handleExtensionNotes(false);
+    }
   }
 
-  handleAugmented() {
+  handleAugmented(): void {
+    const {
+      MINOR_SIXTH
+    } = Interval;
 
+    this._intervals.delete(MINOR_SIXTH);
+
+    this._name += '+';
+    this.handleExtensionNotes(false);
   }
 
   determineChordName(): void {
@@ -209,9 +305,6 @@ class Chord {
       PERFECT_FIFTH,
       MINOR_SIXTH
     } = Interval;
-
-    const isDim: boolean = this._intervals.has(MINOR_THIRD) && this._intervals.has(TRITONE) && !this._intervals.has(PERFECT_FIFTH);
-    const isAug: boolean = this._intervals.has(MAJOR_THIRD) && this._intervals.has(MINOR_SIXTH) && !this._intervals.has(PERFECT_FIFTH);
 
     const hasSecond: boolean = this._intervals.has(MINOR_SECOND) || this._intervals.has(MAJOR_SECOND);
     const hasThird: boolean = this._intervals.has(MINOR_THIRD) || this._intervals.has(MAJOR_THIRD);
@@ -226,8 +319,12 @@ class Chord {
       if(this._intervals.has(MINOR_THIRD)) { this._name += 'm'; }
 
       this.handleExtensionNotes(this._intervals.has(MAJOR_THIRD));
+    } else if(this._intervals.has(MINOR_THIRD) && this._intervals.has(TRITONE)) {
+      this.handleDiminished();
+    } else if(this._intervals.has(MAJOR_THIRD) && this._intervals.has(MINOR_SIXTH)) {
+      this.handleAugmented();
     } else if(hasFifth || this._intervals.has(TRITONE)) {
-      const flatFive = this._intervals.delete(TRITONE);
+      const flatFive = this._intervals.has(TRITONE);
 
       if(hasSecond || hasFourth) {
         let susTwo: Interval | false = false;
@@ -251,15 +348,15 @@ class Chord {
 
         this.handleExtensionNotes(this._intervals.has(MAJOR_THIRD));
 
-        susTwo && this._intervals.add(susTwo);
-        susFour && this._intervals.add(susFour);
+        !!susTwo && this._intervals.add(susTwo);
+        !!susFour && this._intervals.add(susFour);
         this.handleSuspendedNotes();
       } else {
         this._name += '5';
         this.handleExtensionNotes(this._intervals.has(MAJOR_THIRD), true);
       }
 
-      if(flatFive) { this._name += '(b5)'; }
+      if(flatFive) this._name += '(b5)';
     } else if(hasThird) {
       if(this._intervals.has(MINOR_THIRD) && this._intervals.has(TRITONE)) { // diminished case
         this.handleDiminished();
@@ -272,18 +369,38 @@ class Chord {
         this._name += '(no5)'
       }
     } else {
-      this.handleExtensionNotes(this._intervals.has(MAJOR_THIRD));
+      this.handleExtensionNotes(false);
       this._name += '(N/C)';
+      this._prob = 0;
+    }
+
+    if(this._root !== this._bass) {
+      this._name += '/';
+      const bassNoteName = Pitch[this._bass.pitch];
+
+      if(bassNoteName.includes('s')) {
+        this._name += this._intervals.has(MINOR_THIRD) ? bassNoteName.replace('s', '#') : Interval[this._bass.pitch + 1] + 'b';
+      } else {
+        this._name += bassNoteName;
+      }
+
+      this._prob -= 0.5; 
     }
   }
 }
 
 const root = new Note(Pitch.C, 3);
-const third = Interval.MAJOR_SECOND;
-const fifth = Interval.PERFECT_FIFTH;
+const second = Interval.MAJOR_SECOND;
+const third = Interval.MAJOR_THIRD;
+const fifth = Interval.TRITONE;
+const seventh = Interval.MINOR_SEVENTH;
+const sixth = Interval.MINOR_SIXTH;
 
 const chord = new Chord(root, root);
+//chord.addNewInterval(second);
+//chord.addNewInterval(fifth);
+chord.addNewInterval(seventh);
 chord.addNewInterval(third);
-chord.addNewInterval(fifth);
+chord.addNewInterval(sixth);
 chord.determineChordName();
 console.log(chord.toString())
