@@ -10,6 +10,11 @@
         "target": "ESNext"
     },
     "files": [
-        "src/music.ts"
+        "src/main.ts",
+        "src/index.ts",
+        "src/Music/music.ts",
+        "src/Music/index.ts",
+        "src/Fretboard/fretboard.ts",
+        "src/Fretboard/index.ts"
     ]
 }

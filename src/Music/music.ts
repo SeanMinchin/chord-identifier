@@ -1,5 +1,5 @@
-enum Pitch {
-  C = 1,
+export enum Pitch {
+  C = 0,
   Cs,
   D,
   Ds,
@@ -12,9 +12,9 @@ enum Pitch {
   As,
   B
 }
-type Octave = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+export type Octave = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
-class Note {
+export class Note {
   private _pitch: Pitch;
   private _octave: Octave;
 
@@ -31,7 +31,7 @@ class Note {
     return this._octave;
   }
 
-  equals(other: Note) {
+  equals(other: Note): boolean {
     return this.pitch === other.pitch && this.octave === other.octave;
   }
 
@@ -42,9 +42,15 @@ class Note {
   getSemitoneValue(): number {
     return 12 * this.octave + this.pitch;
   }
+
+  compare(other: Note): -1 | 0 | 1 {
+    if(this.getSemitoneValue() < other.getSemitoneValue()) return -1;
+    if(this.getSemitoneValue() > other.getSemitoneValue()) return 1;
+    return 0;
+  }
 }
 
-enum Interval {
+export enum Interval {
   UNISON = 0,
   MINOR_SECOND = 1,
   MAJOR_SECOND = 2,
@@ -59,12 +65,12 @@ enum Interval {
   MAJOR_SEVENTH = 11
 }
 
-const get_interval = (rootNote: Note, relativeNote: Note): Interval => {
-  const semitoneDistance: number = Number(relativeNote) - Number(rootNote);
+export const getInterval = (rootNote: Note, relativeNote: Note): Interval => {
+  const semitoneDistance = relativeNote.pitch - rootNote.pitch;
   return semitoneDistance < 0 ? semitoneDistance + 12 : semitoneDistance;
 }
 
-class Chord {
+export class Chord {
   private _root: Note;
   private _bass: Note;
   private _intervals: Set<Interval>;
@@ -259,6 +265,71 @@ class Chord {
     }
   }
 
+  handleTriad(): void {
+    const {
+      MINOR_THIRD, MAJOR_THIRD
+    } = Interval;
+
+    if(this._intervals.has(MINOR_THIRD)) { this._name += 'm'; }
+    this.handleExtensionNotes(this._intervals.has(MAJOR_THIRD));
+  }
+
+  handlePowerChord(): void {
+    const {
+      MINOR_SECOND, MAJOR_SECOND,
+      MINOR_THIRD, MAJOR_THIRD,
+      PERFECT_FOURTH, TRITONE,
+      PERFECT_FIFTH
+    } = Interval;
+
+    const hasSecond: boolean = this._intervals.has(MINOR_SECOND) || this._intervals.has(MAJOR_SECOND);
+    const hasFourth: boolean = this._intervals.has(PERFECT_FOURTH) || this._intervals.has(TRITONE);
+    const hasDimFifth = this._intervals.has(TRITONE);
+
+    if(hasSecond || hasFourth) {
+      let susTwo: Interval | false = false;
+      let susFour: Interval | false = false;
+
+      if(this._intervals.has(MAJOR_SECOND)) {
+        susTwo = MAJOR_SECOND;
+        this._intervals.delete(MAJOR_SECOND);
+      } else if(this._intervals.has(MINOR_SECOND)) {
+        susTwo = MINOR_SECOND;
+        this._intervals.delete(MINOR_SECOND);
+      }
+
+      if(this._intervals.has(PERFECT_FOURTH)) {
+        susFour = PERFECT_FOURTH;
+        this._intervals.delete(PERFECT_FOURTH);
+      } else if(this._intervals.has(TRITONE)) {
+        susFour = TRITONE;
+        this._intervals.delete(TRITONE);
+      }
+
+      this.handleExtensionNotes(this._intervals.has(MAJOR_THIRD));
+
+      !!susTwo && this._intervals.add(susTwo);
+      !!susFour && this._intervals.add(susFour);
+      this.handleSuspendedNotes();
+    } else {
+      this._name += '5';
+      this.handleExtensionNotes(this._intervals.has(MAJOR_THIRD), true);
+    }
+
+    if(hasDimFifth) this._name += '(b5)';
+  }
+
+  handleDyad(): void {
+    const {
+      MINOR_THIRD, MAJOR_THIRD,
+    } = Interval;
+
+    if(this._intervals.has(MINOR_THIRD)) this._name += 'm';
+
+    this.handleExtensionNotes(this._intervals.has(MAJOR_THIRD));
+    this._name += '(no5)';
+  }
+
   handleDiminished(): void {
     const {
       MAJOR_SIXTH, MINOR_SEVENTH, MAJOR_SEVENTH
@@ -306,9 +377,7 @@ class Chord {
       MINOR_SIXTH
     } = Interval;
 
-    const hasSecond: boolean = this._intervals.has(MINOR_SECOND) || this._intervals.has(MAJOR_SECOND);
     const hasThird: boolean = this._intervals.has(MINOR_THIRD) || this._intervals.has(MAJOR_THIRD);
-    const hasFourth: boolean = this._intervals.has(PERFECT_FOURTH) || this._intervals.has(TRITONE);
     const hasFifth: boolean = this._intervals.has(PERFECT_FIFTH);
 
     if(this._name.includes('s')) {
@@ -316,59 +385,16 @@ class Chord {
     }
 
     if(hasFifth && hasThird) {
-      if(this._intervals.has(MINOR_THIRD)) { this._name += 'm'; }
-
-      this.handleExtensionNotes(this._intervals.has(MAJOR_THIRD));
+      this.handleTriad();
     } else if(this._intervals.has(MINOR_THIRD) && this._intervals.has(TRITONE)) {
       this.handleDiminished();
     } else if(this._intervals.has(MAJOR_THIRD) && this._intervals.has(MINOR_SIXTH)) {
       this.handleAugmented();
     } else if(hasFifth || this._intervals.has(TRITONE)) {
-      const flatFive = this._intervals.has(TRITONE);
-
-      if(hasSecond || hasFourth) {
-        let susTwo: Interval | false = false;
-        let susFour: Interval | false = false;
-
-        if(this._intervals.has(MAJOR_SECOND)) {
-          susTwo = MAJOR_SECOND;
-          this._intervals.delete(MAJOR_SECOND);
-        } else if(this._intervals.has(MINOR_SECOND)) {
-          susTwo = MINOR_SECOND;
-          this._intervals.delete(MINOR_SECOND);
-        }
-
-        if(this._intervals.has(PERFECT_FOURTH)) {
-          susFour = PERFECT_FOURTH;
-          this._intervals.delete(PERFECT_FOURTH);
-        } else if(this._intervals.has(TRITONE)) {
-          susFour = TRITONE;
-          this._intervals.delete(TRITONE);
-        }
-
-        this.handleExtensionNotes(this._intervals.has(MAJOR_THIRD));
-
-        !!susTwo && this._intervals.add(susTwo);
-        !!susFour && this._intervals.add(susFour);
-        this.handleSuspendedNotes();
-      } else {
-        this._name += '5';
-        this.handleExtensionNotes(this._intervals.has(MAJOR_THIRD), true);
-      }
-
-      if(flatFive) this._name += '(b5)';
+      this.handlePowerChord();
     } else if(hasThird) {
-      if(this._intervals.has(MINOR_THIRD) && this._intervals.has(TRITONE)) { // diminished case
-        this.handleDiminished();
-      } else if(this._intervals.has(MAJOR_THIRD) && this._intervals.has(MINOR_SIXTH)) { // augmented case
-        this.handleAugmented();
-      } else { // no 5 case
-        if(this._intervals.has(MINOR_THIRD)) { this._name += 'm'; }
-
-        this.handleExtensionNotes(this._intervals.has(MAJOR_THIRD));
-        this._name += '(no5)'
-      }
-    } else {
+      this.handleDyad();
+    } else { // no chord
       this.handleExtensionNotes(false);
       this._name += '(N/C)';
       this._prob = 0;
@@ -396,11 +422,11 @@ const fifth = Interval.TRITONE;
 const seventh = Interval.MINOR_SEVENTH;
 const sixth = Interval.MINOR_SIXTH;
 
-const chord = new Chord(root, root);
+//const chord = new Chord(root, root);
 //chord.addNewInterval(second);
 //chord.addNewInterval(fifth);
-chord.addNewInterval(seventh);
-chord.addNewInterval(third);
-chord.addNewInterval(sixth);
-chord.determineChordName();
-console.log(chord.toString())
+//chord.addNewInterval(seventh);
+//chord.addNewInterval(third);
+//chord.addNewInterval(sixth);
+//chord.determineChordName();
+//console.log(chord.toString())

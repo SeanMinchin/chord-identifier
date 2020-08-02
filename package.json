@@ -11,5 +11,6 @@
     },
     "keywords": [],
     "author": "Sean Minchin",
-    "license": "MIT"
+    "license": "MIT",
+    "type": "module"
 }
