@@ -4,7 +4,7 @@
     "version": "1.0.0",
     "main": "index.js",
     "scripts": {
-        "start": "tsc --project tsconfig.json && node dist/index.js"
+        "start": "tsc --project tsconfig.json && node dist/guitarChordIdentifier.js"
     },
     "repository": {
         "type": "git"

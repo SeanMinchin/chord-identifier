@@ -1,3 +1,18 @@
+export enum Interval {
+    UNISON = 0,
+    MINOR_SECOND = 1,
+    MAJOR_SECOND = 2,
+    MINOR_THIRD = 3,
+    MAJOR_THIRD = 4,
+    PERFECT_FOURTH = 5,
+    TRITONE = 6,
+    PERFECT_FIFTH = 7,
+    MINOR_SIXTH = 8,
+    MAJOR_SIXTH = 9,
+    MINOR_SEVENTH = 10,
+    MAJOR_SEVENTH = 11
+}
+
 export enum Pitch {
   C = 0,
   Cs,
@@ -48,26 +63,11 @@ export class Note {
     if(this.getSemitoneValue() > other.getSemitoneValue()) return 1;
     return 0;
   }
-}
 
-export enum Interval {
-  UNISON = 0,
-  MINOR_SECOND = 1,
-  MAJOR_SECOND = 2,
-  MINOR_THIRD = 3,
-  MAJOR_THIRD = 4,
-  PERFECT_FOURTH = 5,
-  TRITONE = 6,
-  PERFECT_FIFTH = 7,
-  MINOR_SIXTH = 8,
-  MAJOR_SIXTH = 9,
-  MINOR_SEVENTH = 10,
-  MAJOR_SEVENTH = 11
-}
-
-export const getInterval = (rootNote: Note, relativeNote: Note): Interval => {
-  const semitoneDistance = relativeNote.pitch - rootNote.pitch;
-  return semitoneDistance < 0 ? semitoneDistance + 12 : semitoneDistance;
+  getInterval(relativeNote: Note): Interval {
+    const semitoneDistance = relativeNote.pitch - this.pitch;
+    return semitoneDistance < 0 ? semitoneDistance + 12 : semitoneDistance;
+  }
 }
 
 export class Chord {
@@ -83,6 +83,12 @@ export class Chord {
     this._intervals = intervals ?? new Set<Interval>();
     this._name = Pitch[root.pitch];
     this._prob = 0;
+
+    this.determineChordName();
+  }
+
+  get prob(): number {
+      return this._prob;
   }
 
   toString(): string {
@@ -91,6 +97,7 @@ export class Chord {
 
   addNewInterval(interval: Interval): void {
     this._intervals.add(interval);
+    this.determineChordName();
   }
 
   sortNoteNames = (first: string, second: string): -1 | 0 | 1 => {

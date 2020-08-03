@@ -10,11 +10,11 @@
         "target": "ESNext"
     },
     "files": [
-        "src/main.ts",
-        "src/index.ts",
-        "src/Music/music.ts",
-        "src/Music/index.ts",
-        "src/Fretboard/fretboard.ts",
-        "src/Fretboard/index.ts"
+        "src/guitarChordIdentifier/guitarChordIdentifier.ts",
+        "src/guitarChordIdentifier/index.ts",
+        "src/guitarChordIdentifier/music/music.ts",
+        "src/guitarChordIdentifier/music/index.ts",
+        "src/guitarChordIdentifier/fretboard/fretboard.ts",
+        "src/guitarChordIdentifier/fretboard/index.ts"
     ]
 }
