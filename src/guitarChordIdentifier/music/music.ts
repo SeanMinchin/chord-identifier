@@ -226,7 +226,7 @@ export class Chord {
             }
 
             // case: no extension notes
-            this._name += !isMajorChord && this._intervals.has(MINOR_THIRD) && sevenths[0] === 'maj7' ? 'maj7' : sevenths[0];
+            this._name += !isMajorChord && this._intervals.has(MINOR_THIRD) && sevenths[0] === 'maj7' ? '(maj7)' : sevenths[0];
             return;
         }
 
@@ -239,12 +239,11 @@ export class Chord {
             // case: min6 and maj6
             switch(sixths.length) {
                 case(2):
-                this._name += '(min6, 6)';
-                break;
+                    this._name += '(min6, 6)';
+                    break;
                 case(1):
-                let sixthName = sixths[0].replace('13', '6').replace('b', 'min');
-                if(!isMajorChord && this._intervals.has(MINOR_THIRD) && sixthName) sixthName = ['(', ...sixthName, ')'].join('');
-                this._name += sixthName;
+                    let sixthName = sixths[0].replace('13', '6');
+                    this._name += sixthName === 'b6' ? '(min6)' : sixthName;
                 break;
             }
 
@@ -310,13 +309,15 @@ export class Chord {
     handleSusOrPowerChord(): void {
         const {
             MINOR_SECOND, MAJOR_SECOND,
-            MAJOR_THIRD,
             PERFECT_FOURTH, TRITONE,
+            PERFECT_FIFTH
         } = Interval;
+
+        const hasDimFifth = !this._intervals.has(PERFECT_FIFTH) && this._intervals.has(TRITONE);
+        if(hasDimFifth) this._intervals.delete(TRITONE);
 
         const hasSecond: boolean = this._intervals.has(MINOR_SECOND) || this._intervals.has(MAJOR_SECOND);
         const hasFourth: boolean = this._intervals.has(PERFECT_FOURTH) || this._intervals.has(TRITONE);
-        const hasDimFifth = this._intervals.has(TRITONE);
 
         if(hasSecond || hasFourth) {
             this._prob = 3;
@@ -324,7 +325,7 @@ export class Chord {
         } else {
             this._prob = 2;
             this._name += '5';
-            this.handleExtensionNotes(this._intervals.has(MAJOR_THIRD), true);
+            this.handleExtensionNotes(false, true);
         }
 
         if(hasDimFifth) {
@@ -399,7 +400,7 @@ export class Chord {
         const hasFifth: boolean = this._intervals.has(PERFECT_FIFTH);
 
         if(this._name.includes('s')) {
-            this._name = this._intervals.has(MINOR_THIRD) ? this._name.replace('s', '#') : Interval[this._root.pitch + 1] + 'b';
+            this._name = this._intervals.has(MINOR_THIRD) && !this._intervals.has(MINOR_THIRD) ? this._name.replace('s', '#') : Pitch[this._root.pitch + 1] + 'b';
         }
 
         if(hasFifth && hasThird) {
@@ -415,7 +416,7 @@ export class Chord {
         } else { // no chord
             this.handleExtensionNotes(false);
             this._name += '(N/C)';
-            this._prob = 0;
+            this._prob = 0.5;
         }
 
         if(this._root.pitch !== this._bass.pitch) {
@@ -423,7 +424,7 @@ export class Chord {
             const bassNoteName = Pitch[this._bass.pitch];
 
             if(bassNoteName.includes('s')) {
-            this._name += this._intervals.has(MINOR_THIRD) ? bassNoteName.replace('s', '#') : Interval[this._bass.pitch + 1] + 'b';
+            this._name += this._intervals.has(MINOR_THIRD) ? bassNoteName.replace('s', '#') : Pitch[this._bass.pitch + 1] + 'b';
             } else {
             this._name += bassNoteName;
             }

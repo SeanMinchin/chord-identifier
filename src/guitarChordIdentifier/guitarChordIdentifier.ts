@@ -38,11 +38,21 @@ export const getAllChordsFromNotes = (tuning: TuningName, pressedFrets: Frets): 
         return 0;
     };
 
+    // this is """machine learning"""
+    let filterConditionCutoff: number;
+    const maxProbability = Math.max(...potentialChords.map((chord) => chord.prob));
+    
+    if(maxProbability > 3.8) filterConditionCutoff = 3.7;
+    else if(maxProbability > 2.9) filterConditionCutoff = 2.9;
+    else if(maxProbability > 0.9) filterConditionCutoff = 0.9;
+    else if(maxProbability > 0) filterConditionCutoff = 0.1;
+    else filterConditionCutoff = 0;
+
     return potentialChords
-        .filter((chord) => chord.prob > 0)
+        .filter((chord) => chord.prob >= filterConditionCutoff)
         .sort(sortChordsAsc)
         .map((chord) => chord.toString())
         .filter((name, idx, newArr) => newArr.indexOf(name) === idx);
 }
 
-console.log(getAllChordsFromNotes(TuningName.Standard, [false, 2, 2, 1, 0, 0]));
+console.log(getAllChordsFromNotes(TuningName.Standard, [3, 3, 2, 0, 1, 0]));
