@@ -19,7 +19,7 @@ export const getAllChordsFromNotes = (tuning: TuningName, pressedFrets: Frets): 
 
     if(playedNotes.length === 0) return [];
 
-    playedNotes.forEach(note => console.log(note.toString()));
+    console.log(playedNotes.map(note => note.toString()))
 
     const potentialChords: Array<Chord> = [];
     playedNotes.forEach((potentialRoot) => {
@@ -34,11 +34,12 @@ export const getAllChordsFromNotes = (tuning: TuningName, pressedFrets: Frets): 
 
     return potentialChords
         .sort((first, second) => {
-            if(first.prob > second.prob) return 1;
-            if(first.prob < second.prob) return -1;
+            if(first.prob > second.prob) return -1;
+            if(first.prob < second.prob) return 1;
             return 0;
         })
-        .map((chord) => chord.toString());
+        .map((chord) => chord.toString())
+        .filter((name, idx, newArr) => newArr.indexOf(name) === idx);
 }
 
 console.log(getAllChordsFromNotes(TuningName.Standard, [false, 3, 2, 0, 1, 0]));

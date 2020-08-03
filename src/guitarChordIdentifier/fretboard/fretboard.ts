@@ -43,8 +43,3 @@ export const getNoteFromFret = (string: Note, fret: FretNumber): Note => {
   
     return new Note(actualPitch, newOctave);
 }
-  
-//   const noteLo = new Note(Pitch.B, 3);
-//   const noteHi = new Note(Pitch.C, 5);
-//   console.log(getNoteFromFret(noteLo, 20).toString());
-//   console.log(Interval[getInterval(noteLo, noteHi)])
