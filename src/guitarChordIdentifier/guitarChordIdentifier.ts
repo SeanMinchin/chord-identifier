@@ -32,14 +32,17 @@ export const getAllChordsFromNotes = (tuning: TuningName, pressedFrets: Frets): 
         potentialChords.push(new Chord(potentialRoot, bassNote, allIntervals));
     });
 
+    const sortChordsAsc = (first: Chord, second: Chord) => {
+        if(first.prob > second.prob) return -1;
+        if(first.prob < second.prob) return 1;
+        return 0;
+    };
+
     return potentialChords
-        .sort((first, second) => {
-            if(first.prob > second.prob) return -1;
-            if(first.prob < second.prob) return 1;
-            return 0;
-        })
+        .filter((chord) => chord.prob > 0)
+        .sort(sortChordsAsc)
         .map((chord) => chord.toString())
         .filter((name, idx, newArr) => newArr.indexOf(name) === idx);
 }
 
-console.log(getAllChordsFromNotes(TuningName.Standard, [false, 3, 2, 0, 1, 0]));
+console.log(getAllChordsFromNotes(TuningName.Standard, [false, 2, 2, 1, 0, 0]));

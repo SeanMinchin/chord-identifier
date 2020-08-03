@@ -1,3 +1,3 @@
-import { TuningName, StringNotes, guitarTunings, FretNumber, getNoteFromFret } from './fretboard.js';
+import { TuningName, StringNotes, guitarTunings, FretNumber, TuningOffset, getNoteFromFret } from './fretboard.js';
 
-export { TuningName, StringNotes, guitarTunings, FretNumber, getNoteFromFret };
+export { TuningName, StringNotes, guitarTunings, FretNumber, TuningOffset, getNoteFromFret };

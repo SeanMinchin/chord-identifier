@@ -121,7 +121,7 @@ export class Chord {
                     .forEach((label) => tempName = [...tempName, `${label},`]);
                 tempName[tempName.length - 1] = ')';
 
-                this._name = tempName.toString();
+                this._name = tempName.join('');
                 break;
             case(1):
                 const extensionNoteName = labels[0];
@@ -185,6 +185,7 @@ export class Chord {
         const sevenths = extensionNotes.get(7) ?? [];
         extensionNotes.delete(7);
         if(sevenths.length !== 0) {
+            this._prob += 0.25;
             if(isPowerChord) this._name += 'add';
 
             // case: min7 and maj7
@@ -300,7 +301,7 @@ export class Chord {
             MINOR_THIRD, MAJOR_THIRD
         } = Interval;
 
-        this._prob = 3;
+        this._prob = 4;
 
         if(this._intervals.has(MINOR_THIRD)) this._name += 'm';
         this.handleExtensionNotes(this._intervals.has(MAJOR_THIRD));
@@ -318,19 +319,26 @@ export class Chord {
         const hasDimFifth = this._intervals.has(TRITONE);
 
         if(hasSecond || hasFourth) {
+            this._prob = 3;
             this.handleSuspendedNotes();
         } else {
+            this._prob = 2;
             this._name += '5';
             this.handleExtensionNotes(this._intervals.has(MAJOR_THIRD), true);
         }
 
-        if(hasDimFifth) this._name += '(b5)';
+        if(hasDimFifth) {
+            this._prob -= 0.75;
+            this._name += '(b5)'
+        };
     }
 
     handleDyad(): void {
         const {
-        MINOR_THIRD, MAJOR_THIRD,
+            MINOR_THIRD, MAJOR_THIRD,
         } = Interval;
+
+        this._prob = 1;
 
         if(this._intervals.has(MINOR_THIRD)) this._name += 'm';
 
@@ -351,6 +359,7 @@ export class Chord {
             return;
         }
 
+        this._prob = 3;
         if(this._intervals.has(MAJOR_SIXTH)) { // dim7 chord
             this._intervals.delete(MAJOR_SIXTH);
             this._name += '°7';
@@ -369,6 +378,8 @@ export class Chord {
         const {
             MINOR_SIXTH
         } = Interval;
+
+        this._prob = 1.5;
 
         this._intervals.delete(MINOR_SIXTH);
 
