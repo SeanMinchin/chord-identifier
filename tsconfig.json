@@ -1,20 +1,16 @@
 {
     "compilerOptions": {
-        "outDir": "./dist/",
-        "module": "ESNext",
+        "allowJs": false,
+        "module": "commonjs",
+        "moduleResolution": "node",
         "noImplicitAny": true,
-        "removeComments": true,
-        "preserveConstEnums": true,
-        "sourceMap": true,
         "strict": true,
-        "target": "ESNext"
+        "target": "ESNext",
+        "outDir": "lib",
+        "declaration": true,
+        "allowSyntheticDefaultImports": true,
     },
-    "files": [
-        "src/guitarChordIdentifier/guitarChordIdentifier.ts",
-        "src/guitarChordIdentifier/index.ts",
-        "src/guitarChordIdentifier/music/music.ts",
-        "src/guitarChordIdentifier/music/index.ts",
-        "src/guitarChordIdentifier/fretboard/fretboard.ts",
-        "src/guitarChordIdentifier/fretboard/index.ts"
+    "include": [
+        "src/**/*"
     ]
 }

@@ -1,16 +1,15 @@
 {
-    "name": "guitar-chord-erudite",
-    "description": "",
+    "name": "chord-identifier",
+    "description": "Determine possible musical chord(s) from a guitar fretboard or collection of actual notes.",
     "version": "1.0.0",
     "main": "index.js",
     "scripts": {
-        "start": "tsc --project tsconfig.json && node dist/guitarChordIdentifier.js"
+        "start": "tsc --project tsconfig.json && node lib/chordIdentifier.js"
     },
     "repository": {
         "type": "git"
     },
     "keywords": [],
     "author": "Sean Minchin",
-    "license": "MIT",
-    "type": "module"
+    "license": "MIT"
 }

@@ -1,9 +1,9 @@
-import { Pitch, Octave, Note, Interval, Chord } from './music/index.js';
-import { TuningName, StringNotes, guitarTunings, FretNumber, getNoteFromFret } from './fretboard/index.js';
+import { Pitch, Octave, Note, Interval, Chord } from './music';
+import { TuningName, StringNotes, guitarTunings, FretNumber, getNoteFromFret } from './fretboard';
 
 export type Frets = [FretNumber|false, FretNumber|false, FretNumber|false, FretNumber|false, FretNumber|false, FretNumber|false]
 
-export const getAllChordsFromNotes = (tuning: TuningName, pressedFrets: Frets): Array<string> => {
+export const getAllChordsFromFretboard = (tuning: TuningName, pressedFrets: Frets): Array<string> => {
     const openStringNotes = guitarTunings().get(tuning);
     if(openStringNotes === undefined) throw new Error('Error: invalid tuning provided.');
     
@@ -55,4 +55,6 @@ export const getAllChordsFromNotes = (tuning: TuningName, pressedFrets: Frets): 
         .filter((name, idx, newArr) => newArr.indexOf(name) === idx);
 }
 
-console.log(getAllChordsFromNotes(TuningName.Standard, [3, 3, 2, 0, 1, 0]));
+export const getAllChordsFromNotes = (): Array<String> => { return []}
+
+console.log(getAllChordsFromFretboard(TuningName.Standard, [false, 2, 4, 4, false, false]));

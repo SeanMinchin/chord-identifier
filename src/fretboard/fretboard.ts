@@ -1,4 +1,4 @@
-import  { Pitch, Note, Octave, Interval } from '../music/index.js'
+import  { Pitch, Note, Octave, Interval } from '../music'
 
 export enum TuningName {
     Standard,
