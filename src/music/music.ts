@@ -198,16 +198,17 @@ export class Chord {
             if(interval === MINOR_THIRD && !isMajorChord) return;
             const pair: NoteValueNamePair | undefined = nameLookup.get(interval);
             if(pair !== undefined) {
-                const { name } = pair;
-                const value = <ExtensionNoteInterval> pair.value;
-                extensionNotes.set(value, [...(extensionNotes.get(value) ?? []), name])
+                const { value, name } = pair;
+                const intervalToAdd = <ExtensionNoteInterval>value;
+                const currentIntervals = extensionNotes.get(intervalToAdd) ?? [];
+                extensionNotes.set(intervalToAdd, [...currentIntervals, name])
             }
         });
 
         console.log(extensionNotes);
 
         // case: no extension notes or sevenths
-        if(!(Array.from(extensionNotes.values()).some((label) => label.length > 0))) return;
+        if(Array.from(extensionNotes.values()).some((label) => label.length > 0) === false) return;
 
         // case: seventh(s) present
         const sevenths = extensionNotes.get(7) ?? [];
@@ -332,7 +333,7 @@ export class Chord {
 
         this._prob = 4;
 
-        if(this._intervals.has(MINOR_THIRD)) this._name += 'm';
+        if(this._intervals.has(MINOR_THIRD) && !this._intervals.has(MAJOR_THIRD)) this._name += 'm';
         this.handleExtensionNotes(this._intervals.has(MAJOR_THIRD));
     }
 
@@ -430,7 +431,7 @@ export class Chord {
         const hasFifth: boolean = this._intervals.has(PERFECT_FIFTH);
 
         if(this._name.includes('s')) {
-            this._name = this._intervals.has(MINOR_THIRD) && !this._intervals.has(MINOR_THIRD) ? this._name.replace('s', '#') : Pitch[this._root.pitch + 1] + 'b';
+            this._name = this._intervals.has(MINOR_THIRD) && !this._intervals.has(MAJOR_THIRD) ? this._name.replace('s', '#') : Pitch[this._root.pitch + 1] + 'b';
         }
 
         if(hasFifth && hasThird) {
@@ -443,21 +444,18 @@ export class Chord {
             this.handleSusOrPowerChord();
         } else if(hasThird) {
             this.handleDyad();
-        } else { // no chord
+        } else {
+            // no chord
             this.handleExtensionNotes(false);
             this._name += '(N/C)';
-            this._prob = 0.5;
+            this._prob = 0;
         }
 
         if(this._root.pitch !== this._bass.pitch) {
             this._name += '/';
             const bassNoteName = Pitch[this._bass.pitch];
 
-            if(bassNoteName.includes('s')) {
-            this._name += this._intervals.has(MINOR_THIRD) ? bassNoteName.replace('s', '#') : Pitch[this._bass.pitch + 1] + 'b';
-            } else {
-            this._name += bassNoteName;
-            }
+            this._name += bassNoteName.replace('s', '#');
 
             this._prob -= 0.5; 
         }

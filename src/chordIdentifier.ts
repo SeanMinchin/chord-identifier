@@ -1,62 +1,55 @@
-import { Note, Interval, Chord } from './music';
+import { Note, Interval, Chord, createNoteFromName } from './music';
 import { TuningName, guitarTunings, FretNumber, getNoteFromFret } from './fretboard';
 
 export type Frets = [FretNumber|false, FretNumber|false, FretNumber|false, FretNumber|false, FretNumber|false, FretNumber|false]
 
-export const getAllChordsFromNotes = (playedNotes: Array<Note>, bassNote?: Note): Array<string> => {
-    if(playedNotes.length === 0) return [];
+export const getAllChordsFromNotes = (playedNotesList: Array<Note | string>, noteInBass?: Note | string): Array<string> => {
+    if(playedNotesList.length === 0) return [];
 
-    (bassNote === undefined) && playedNotes.forEach((note) => {
-        if(bassNote === undefined || note.compare(bassNote) === -1) bassNote = note;
-    });
+    const playedNotes = playedNotesList.map((note) => typeof note === 'string' ? createNoteFromName(note) : note);
 
-    const smallestSemitone = Math.min(...playedNotes.map((note) => note.getSemitoneValue()));
-    bassNote = playedNotes.find((note) => note.getSemitoneValue() === smallestSemitone);
-
-    //console.log(playedNotes.map(note => note.toString()))
+    let bassNote = (typeof noteInBass === 'string') ? createNoteFromName(noteInBass) : noteInBass;
+    if(bassNote === undefined) {
+        playedNotes.forEach((note) => {
+            if(bassNote === undefined || note.compare(bassNote) === -1) bassNote = note;
+        });
+    }
 
     const potentialChords: Array<Chord> = [];
     playedNotes.forEach((potentialRoot) => {
-        const allIntervals = new Set<Interval>(playedNotes
-            .filter((note) => !note.equals(potentialRoot))
-            .map((note) => potentialRoot.getInterval(note))
+        const allIntervals = new Set<Interval>(
+            playedNotes
+                .filter((note) => !note.equals(potentialRoot))
+                .map((note) => potentialRoot.getInterval(note))
         );
 
         if(bassNote === undefined) throw new Error('Error: bass note cannot be determined.');
         potentialChords.push(new Chord(potentialRoot, bassNote, allIntervals));
     });
 
-    const sortChordsAsc = (first: Chord, second: Chord) => {
+    // this is """machine learning"""
+    const probabilityCuttofs: Array<number> = [3.8, 3.3, 2.8, 1.8, 0.8, 0.2];
+    let filterConditionCutoff: number | null = null;
+    const maxProbability = Math.max(...potentialChords.map((chord) => chord.prob));
+
+    for(const cutoff of probabilityCuttofs) {
+        if(maxProbability >= cutoff) {
+            filterConditionCutoff = cutoff;
+            break;
+        }
+    }
+
+    const sortChordsAsc = (first: Chord, second: Chord): -1 | 0 | 1 => {
         if(first.prob > second.prob) return -1;
         if(first.prob < second.prob) return 1;
         return 0;
     };
 
-    // this is """machine learning"""
-    const probabilityCuttofs = new Map<number, number>([
-        [3.8, 3.7],
-        [2.9, 2.9],
-        [0.9, 0.9],
-        [0, 0.1]
-    ]);
-    let filterConditionCutoff: number | null = null;
-    const maxProbability = Math.max(...potentialChords.map((chord) => chord.prob));
-
-    probabilityCuttofs.forEach((filterCuttoff, probCutoff) => {
-        if(maxProbability > probCutoff) filterConditionCutoff = filterCuttoff;
-    })
-    
-    // if(maxProbability > 3.8) filterConditionCutoff = 3.7;
-    // else if(maxProbability > 2.9) filterConditionCutoff = 2.9;
-    // else if(maxProbability > 0.9) filterConditionCutoff = 0.9;
-    // else if(maxProbability > 0) filterConditionCutoff = 0.1;
-    // else filterConditionCutoff = 0;
-
     return potentialChords
-        .filter((chord) => chord.prob >= (filterConditionCutoff ?? 0))
-        .sort(sortChordsAsc)
-        .map((chord) => chord.toString())
-        .filter((name, idx, newArr) => newArr.indexOf(name) === idx);
+        .filter((chord) => chord.prob >= (filterConditionCutoff ?? 0)) // filter through only chords that meet the cutoff probability
+        .sort(sortChordsAsc) // sort chords in ascending order of probability
+        .map((chord) => chord.toString()) // map to chord names (string format)
+        .filter((name, index, chordNameList) => chordNameList.indexOf(name) === index); // filter out duplicate chord names
 }
 
 export const getAllChordsFromFretboard = (tuning: TuningName, pressedFrets: Frets): Array<string> => {
@@ -76,4 +69,4 @@ export const getAllChordsFromFretboard = (tuning: TuningName, pressedFrets: Fret
     return getAllChordsFromNotes(playedNotes);
 }
 
-console.log(getAllChordsFromFretboard(TuningName.Standard, [false, 2, 4, 1, false, false]));
+console.log(getAllChordsFromFretboard(TuningName.Standard, [false, 0, 0, 2, 3, 0]));
