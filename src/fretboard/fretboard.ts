@@ -1,4 +1,4 @@
-import  { Pitch, Note, Octave, Interval } from '../music'
+import  { Pitch, Note, Octave } from '../music'
 
 export enum TuningName {
     Standard,
@@ -34,13 +34,13 @@ export type FretNumber = 0|1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21
 export type TuningOffset = -4|-3|-2|-1|0|1|2|3|4;
 
 export const getNoteFromFret = (string: Note, fret: FretNumber, tuningOffset: TuningOffset = 0): Note => {
-    const resultantPitch = string.pitch + fret + tuningOffset;
+    let resultantPitch = string.pitch + fret + tuningOffset;
+    if(resultantPitch < 0) resultantPitch += 12;
+
     const octaveOffest = <Octave>Math.floor(resultantPitch / 12);
     const actualPitch = <Pitch>(resultantPitch % 12);
     
     const newOctave = <Octave>(string.octave + octaveOffest);
-
-    //console.log(actualPitch, newOctave)
   
     return new Note(actualPitch, newOctave);
 }

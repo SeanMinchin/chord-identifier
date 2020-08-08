@@ -70,6 +70,34 @@ export class Note {
     }
 }
 
+export const createNoteFromName = (noteName: string): Note => {
+    noteName = noteName.trim();
+
+    // index after where the pitch name ends and where the octave number is
+    const splitIndex = noteName.includes('#') || noteName.includes('b') ? 2 : 1;
+    const octave = <Octave>Number(noteName.slice(splitIndex));
+    
+    const getPitchOffsetValue = (pitchName: string): -1 | 0 | 1 => {
+        if(pitchName.length === 1) return 0;
+        if(pitchName.charAt(1) === '#') return 1;
+        if(pitchName.charAt(1) === 'b') return -1;
+        throw new Error('Error: note cannot be determined from name.');
+    }
+
+    const offset = getPitchOffsetValue(noteName.slice(0, splitIndex));
+    const noteBase = noteName.charAt(0);
+
+    if(!Object.values(Pitch).includes(noteBase)) throw new Error('Error: note cannot be determined from name.');
+
+    let pitchValue = Pitch[<keyof typeof Pitch>noteBase] + offset;
+    if(pitchValue === 12) pitchValue = 0;
+    if(pitchValue === -1) pitchValue = 11;
+
+    const pitch = <Pitch>pitchValue;
+
+    return new Note(pitch, octave);
+}
+
 export class Chord {
     private _root: Note;
     private _bass: Note;
@@ -206,19 +234,22 @@ export class Chord {
                 if(sevenths[0] === 'maj7') this._name += 'maj';
         
                 switch(nextLowestIntervalLabels.length) {
-                case(3):
-                case(2):
-                    let tempName = ['('];
-                    nextLowestIntervalLabels.sort(this.sortNoteNames).forEach((label) => {
-                    tempName = [...tempName, `${label},`];
-                    });
-                    tempName[tempName.length - 1] = ')';
-                    this._name = tempName.toString();
-                    break;
-                case(1):
-                    const noteName = nextLowestIntervalLabels[0];
-                    this._name += noteName.length > 1 ? `(${noteName})` : noteName;
-                    break;
+                    case(3):
+                    case(2):
+                        let tempName = ['('];
+                        nextLowestIntervalLabels
+                            .sort(this.sortNoteNames)
+                            .forEach((label) => { tempName = [...tempName, `${label},`]; });
+
+                        tempName[tempName.length - 1] = ')';
+                        this._name = tempName.toString();
+                        break;
+                    case(1):
+                        let noteName = nextLowestIntervalLabels[0];
+                        noteName = noteName.length > 1 ? `(${noteName})` : noteName;
+
+                        this._name += isPowerChord ? ['(', ...noteName, ')'].join('') : noteName;
+                        break;
                 }
 
                 this.fillExtensionNotes(extensionNotes);
@@ -226,7 +257,7 @@ export class Chord {
             }
 
             // case: no extension notes
-            this._name += !isMajorChord && this._intervals.has(MINOR_THIRD) && sevenths[0] === 'maj7' ? '(maj7)' : sevenths[0];
+            this._name += (!isMajorChord && this._intervals.has(MINOR_THIRD) && sevenths[0] === 'maj7') || isPowerChord ? '(maj7)' : sevenths[0];
             return;
         }
 
@@ -242,8 +273,7 @@ export class Chord {
                     this._name += '(min6, 6)';
                     break;
                 case(1):
-                    let sixthName = sixths[0].replace('13', '6');
-                    this._name += sixthName === 'b6' ? '(min6)' : sixthName;
+                    this._name += sixths[0] === 'b13' ? '(min6)' : '6';
                 break;
             }
 

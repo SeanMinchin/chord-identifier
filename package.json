@@ -2,8 +2,9 @@
     "name": "chord-identifier",
     "description": "Determine possible musical chord(s) from a guitar fretboard or collection of actual notes.",
     "version": "1.0.0",
-    "main": "index.js",
+    "main": "lib/index.js",
     "scripts": {
+        "build": "tsc --project tsconfig.json",
         "start": "tsc --project tsconfig.json && node lib/chordIdentifier.js"
     },
     "repository": {
@@ -11,5 +12,9 @@
     },
     "keywords": [],
     "author": "Sean Minchin",
-    "license": "MIT"
+    "license": "MIT",
+    "dependencies": {},
+    "devDependencies": {
+        "typescript": "^3.9.7"
+    }
 }

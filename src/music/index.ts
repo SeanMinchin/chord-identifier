@@ -1,3 +1,3 @@
-import { Pitch, Octave, Note, Interval, Chord } from './music';
+import { Pitch, Octave, Note, Interval, Chord, createNoteFromName } from './music';
 
-export { Pitch, Octave, Note, Interval, Chord };
+export { Pitch, Octave, Note, Interval, Chord, createNoteFromName };

@@ -1,7 +1,63 @@
-import { Pitch, Octave, Note, Interval, Chord } from './music';
-import { TuningName, StringNotes, guitarTunings, FretNumber, getNoteFromFret } from './fretboard';
+import { Note, Interval, Chord } from './music';
+import { TuningName, guitarTunings, FretNumber, getNoteFromFret } from './fretboard';
 
 export type Frets = [FretNumber|false, FretNumber|false, FretNumber|false, FretNumber|false, FretNumber|false, FretNumber|false]
+
+export const getAllChordsFromNotes = (playedNotes: Array<Note>, bassNote?: Note): Array<string> => {
+    if(playedNotes.length === 0) return [];
+
+    (bassNote === undefined) && playedNotes.forEach((note) => {
+        if(bassNote === undefined || note.compare(bassNote) === -1) bassNote = note;
+    });
+
+    const smallestSemitone = Math.min(...playedNotes.map((note) => note.getSemitoneValue()));
+    bassNote = playedNotes.find((note) => note.getSemitoneValue() === smallestSemitone);
+
+    //console.log(playedNotes.map(note => note.toString()))
+
+    const potentialChords: Array<Chord> = [];
+    playedNotes.forEach((potentialRoot) => {
+        const allIntervals = new Set<Interval>(playedNotes
+            .filter((note) => !note.equals(potentialRoot))
+            .map((note) => potentialRoot.getInterval(note))
+        );
+
+        if(bassNote === undefined) throw new Error('Error: bass note cannot be determined.');
+        potentialChords.push(new Chord(potentialRoot, bassNote, allIntervals));
+    });
+
+    const sortChordsAsc = (first: Chord, second: Chord) => {
+        if(first.prob > second.prob) return -1;
+        if(first.prob < second.prob) return 1;
+        return 0;
+    };
+
+    // this is """machine learning"""
+    const probabilityCuttofs = new Map<number, number>([
+        [3.8, 3.7],
+        [2.9, 2.9],
+        [0.9, 0.9],
+        [0, 0.1]
+    ]);
+    let filterConditionCutoff: number | null = null;
+    const maxProbability = Math.max(...potentialChords.map((chord) => chord.prob));
+
+    probabilityCuttofs.forEach((filterCuttoff, probCutoff) => {
+        if(maxProbability > probCutoff) filterConditionCutoff = filterCuttoff;
+    })
+    
+    // if(maxProbability > 3.8) filterConditionCutoff = 3.7;
+    // else if(maxProbability > 2.9) filterConditionCutoff = 2.9;
+    // else if(maxProbability > 0.9) filterConditionCutoff = 0.9;
+    // else if(maxProbability > 0) filterConditionCutoff = 0.1;
+    // else filterConditionCutoff = 0;
+
+    return potentialChords
+        .filter((chord) => chord.prob >= (filterConditionCutoff ?? 0))
+        .sort(sortChordsAsc)
+        .map((chord) => chord.toString())
+        .filter((name, idx, newArr) => newArr.indexOf(name) === idx);
+}
 
 export const getAllChordsFromFretboard = (tuning: TuningName, pressedFrets: Frets): Array<string> => {
     const openStringNotes = guitarTunings().get(tuning);
@@ -17,44 +73,7 @@ export const getAllChordsFromFretboard = (tuning: TuningName, pressedFrets: Fret
         playedNotes.push(currentNote);
     });
 
-    if(playedNotes.length === 0) return [];
-
-    console.log(playedNotes.map(note => note.toString()))
-
-    const potentialChords: Array<Chord> = [];
-    playedNotes.forEach((potentialRoot) => {
-        const allIntervals = new Set<Interval>(playedNotes
-            .filter((note) => !note.equals(potentialRoot))
-            .map((note) => potentialRoot.getInterval(note))
-        );
-
-        if(bassNote === null) throw new Error('Error: bass note cannot be determined.');
-        potentialChords.push(new Chord(potentialRoot, bassNote, allIntervals));
-    });
-
-    const sortChordsAsc = (first: Chord, second: Chord) => {
-        if(first.prob > second.prob) return -1;
-        if(first.prob < second.prob) return 1;
-        return 0;
-    };
-
-    // this is """machine learning"""
-    let filterConditionCutoff: number;
-    const maxProbability = Math.max(...potentialChords.map((chord) => chord.prob));
-    
-    if(maxProbability > 3.8) filterConditionCutoff = 3.7;
-    else if(maxProbability > 2.9) filterConditionCutoff = 2.9;
-    else if(maxProbability > 0.9) filterConditionCutoff = 0.9;
-    else if(maxProbability > 0) filterConditionCutoff = 0.1;
-    else filterConditionCutoff = 0;
-
-    return potentialChords
-        .filter((chord) => chord.prob >= filterConditionCutoff)
-        .sort(sortChordsAsc)
-        .map((chord) => chord.toString())
-        .filter((name, idx, newArr) => newArr.indexOf(name) === idx);
+    return getAllChordsFromNotes(playedNotes);
 }
 
-export const getAllChordsFromNotes = (): Array<String> => { return []}
-
-console.log(getAllChordsFromFretboard(TuningName.Standard, [false, 2, 4, 4, false, false]));
+console.log(getAllChordsFromFretboard(TuningName.Standard, [false, 2, 4, 1, false, false]));
