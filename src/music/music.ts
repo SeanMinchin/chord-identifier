@@ -128,10 +128,10 @@ export class Chord {
         this.determineChordName();
     }
 
-    sortNoteNames = (first: string, second: string): -1 | 0 | 1 => {
+    sortNoteNames = (first: string, second: string): -1 | 1 => {
         if(first[0] === 'b' || second[0] === '#' || first === '7') return -1;
         if(first[0] === '#' || second[0] === 'b' || first === 'maj7') return 1;
-        throw new Error('Invalid labels');
+        throw new Error('Error: invalid note name labels');
     }
 
     fillExtensionNotes(remainingNotes: Map<number, Array<string>>): void {
@@ -247,7 +247,7 @@ export class Chord {
                         break;
                     case(1):
                         let noteName = nextLowestIntervalLabels[0];
-                        noteName = noteName.length > 1 ? `(${noteName})` : noteName;
+                        noteName = ['#', 'b'].includes(noteName.slice(-1)) ? `(${noteName})` : noteName;
 
                         this._name += isPowerChord ? ['(', ...noteName, ')'].join('') : noteName;
                         break;
@@ -386,6 +386,7 @@ export class Chord {
         const dimFifthIsRoot = this._intervals.has(MINOR_SEVENTH) && this._intervals.has(MAJOR_SEVENTH);
         const dimSeventhIsRoot = this._intervals.has(MAJOR_SIXTH) && (this._intervals.has(MINOR_SEVENTH) || this._intervals.has(MAJOR_SEVENTH));
 
+        // in either of these cases, we can be sure that the current "potential" root is not the chord's actual root
         if(dimFifthIsRoot || dimSeventhIsRoot) {
             this._prob = -1;
             return;

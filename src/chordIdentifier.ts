@@ -28,7 +28,7 @@ export const getAllChordsFromNotes = (playedNotesList: Array<Note | string>, not
     });
 
     // this is """machine learning"""
-    const probabilityCuttofs: Array<number> = [3.8, 3.3, 2.8, 1.8, 0.8, 0.2];
+    const probabilityCuttofs: Array<number> = [3.8, 2.8, 1.8, 0.8, 0.2];
     let filterConditionCutoff: number | null = null;
     const maxProbability = Math.max(...potentialChords.map((chord) => chord.prob));
 
@@ -69,4 +69,4 @@ export const getAllChordsFromFretboard = (tuning: TuningName, pressedFrets: Fret
     return getAllChordsFromNotes(playedNotes);
 }
 
-console.log(getAllChordsFromFretboard(TuningName.Standard, [false, 0, 0, 2, 3, 0]));
+console.log(getAllChordsFromFretboard(TuningName.Standard, [4, 7, 7, 6, 5, 5]));
