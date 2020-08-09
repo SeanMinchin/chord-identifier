@@ -1,17 +1,17 @@
 import { Note, Interval, Chord, createNoteFromName } from './music';
-import { TuningName, guitarTunings, FretNumber, getNoteFromFret } from './fretboard';
+import { TuningName, guitarTunings, FretNumber, getNoteFromFret, TuningOffset } from './fretboard';
 
 export type Frets = [FretNumber|false, FretNumber|false, FretNumber|false, FretNumber|false, FretNumber|false, FretNumber|false]
 
-export const getAllChordsFromNotes = (playedNotesList: Array<Note | string>, noteInBass?: Note | string): Array<string> => {
+export const getAllChordsFromNotes = (playedNotesList: Array<Note | string>, noteInBass: Note | string | null = null): Array<string> => {
     if(playedNotesList.length === 0) return [];
 
     const playedNotes = playedNotesList.map((note) => typeof note === 'string' ? createNoteFromName(note) : note);
 
     let bassNote = (typeof noteInBass === 'string') ? createNoteFromName(noteInBass) : noteInBass;
-    if(bassNote === undefined) {
+    if(bassNote === null) {
         playedNotes.forEach((note) => {
-            if(bassNote === undefined || note.compare(bassNote) === -1) bassNote = note;
+            if(bassNote === null || note.compare(bassNote) === -1) bassNote = note;
         });
     }
 
@@ -23,7 +23,7 @@ export const getAllChordsFromNotes = (playedNotesList: Array<Note | string>, not
                 .map((note) => potentialRoot.getInterval(note))
         );
 
-        if(bassNote === undefined) throw new Error('Error: bass note cannot be determined.');
+        if(bassNote === null) throw new Error('Error: bass note cannot be determined.');
         potentialChords.push(new Chord(potentialRoot, bassNote, allIntervals));
     });
 
@@ -52,7 +52,7 @@ export const getAllChordsFromNotes = (playedNotesList: Array<Note | string>, not
         .filter((name, index, chordNameList) => chordNameList.indexOf(name) === index); // filter out duplicate chord names
 }
 
-export const getAllChordsFromFretboard = (tuning: TuningName, pressedFrets: Frets): Array<string> => {
+export const getAllChordsFromFretboard = (tuning: TuningName, pressedFrets: Frets, tuningOffset: TuningOffset = 0): Array<string> => {
     const openStringNotes = guitarTunings().get(tuning);
     if(openStringNotes === undefined) throw new Error('Error: invalid tuning provided.');
     
@@ -61,12 +61,12 @@ export const getAllChordsFromFretboard = (tuning: TuningName, pressedFrets: Fret
     pressedFrets.forEach((fretNumber, index) => {
         if(fretNumber === false) return;
 
-        const currentNote = getNoteFromFret(openStringNotes[index], fretNumber);
+        const currentNote = getNoteFromFret(openStringNotes[index], fretNumber, tuningOffset);
         if(bassNote === null || currentNote.compare(bassNote) === -1) bassNote = currentNote;
         playedNotes.push(currentNote);
     });
 
-    return getAllChordsFromNotes(playedNotes);
+    return getAllChordsFromNotes(playedNotes, bassNote);
 }
 
-console.log(getAllChordsFromFretboard(TuningName.Standard, [4, 7, 7, 6, 5, 5]));
+console.log(getAllChordsFromFretboard(TuningName.Standard, [false, false, 9, 8, 9, false]));

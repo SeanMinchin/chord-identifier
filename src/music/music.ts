@@ -380,6 +380,7 @@ export class Chord {
 
     handleDiminished(): void {
         const {
+            TRITONE,
             MAJOR_SIXTH, MINOR_SEVENTH, MAJOR_SEVENTH
         } = Interval;
 
@@ -393,6 +394,8 @@ export class Chord {
         }
 
         this._prob = 3;
+        this._intervals.delete(TRITONE);
+
         if(this._intervals.has(MAJOR_SIXTH)) { // dim7 chord
             this._intervals.delete(MAJOR_SIXTH);
             this._name += '°7';
@@ -413,7 +416,6 @@ export class Chord {
         } = Interval;
 
         this._prob = 1.5;
-
         this._intervals.delete(MINOR_SIXTH);
 
         this._name += '+';
