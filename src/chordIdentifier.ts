@@ -68,5 +68,3 @@ export const getAllChordsFromFretboard = (tuning: TuningName, pressedFrets: Fret
 
     return getAllChordsFromNotes(playedNotes, bassNote);
 }
-
-console.log(getAllChordsFromFretboard(TuningName.Standard, [false, false, 9, 8, 9, false]));

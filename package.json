@@ -5,7 +5,7 @@
     "main": "lib/index.js",
     "scripts": {
         "build": "tsc --project tsconfig.json",
-        "start": "tsc --project tsconfig.json && node lib/chordIdentifier.js"
+        "start": "tsc --project tsconfig.json && node lib/index.js"
     },
     "repository": {
         "type": "git"

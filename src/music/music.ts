@@ -159,7 +159,7 @@ export class Chord {
         }
     }
 
-    handleExtensionNotes(isMajorChord: boolean, isPowerChord: boolean = false): void {
+    handleExtensionNotes(isMajorChord: boolean, isPowerChord: boolean = false, isDiminished: boolean = false): void {
         const {
             MINOR_SECOND, MAJOR_SECOND,
             MINOR_THIRD,
@@ -258,7 +258,7 @@ export class Chord {
             }
 
             // case: no extension notes
-            this._name += (!isMajorChord && this._intervals.has(MINOR_THIRD) && sevenths[0] === 'maj7') || isPowerChord ? '(maj7)' : sevenths[0];
+            this._name += (!isMajorChord && !isDiminished && this._intervals.has(MINOR_THIRD) && sevenths[0] === 'maj7') || isPowerChord ? '(maj7)' : sevenths[0];
             return;
         }
 
@@ -289,7 +289,6 @@ export class Chord {
     handleSuspendedNotes(): void {
         const {
             MINOR_SECOND, MAJOR_SECOND,
-            MAJOR_THIRD,
             PERFECT_FOURTH, TRITONE,
         } = Interval;
 
@@ -312,7 +311,7 @@ export class Chord {
             this._intervals.delete(TRITONE);
         }
 
-        this.handleExtensionNotes(this._intervals.has(MAJOR_THIRD));
+        this.handleExtensionNotes(false);
 
         !!susTwo && this._intervals.add(susTwo);
         !!susFour && this._intervals.add(susFour);
@@ -393,20 +392,20 @@ export class Chord {
             return;
         }
 
-        this._prob = 3;
+        this._prob = 4;
         this._intervals.delete(TRITONE);
 
         if(this._intervals.has(MAJOR_SIXTH)) { // dim7 chord
             this._intervals.delete(MAJOR_SIXTH);
             this._name += '°7';
-            this.handleExtensionNotes(false);
+            this.handleExtensionNotes(false, false, true);
         } else if(this._intervals.has(MINOR_SEVENTH)) { // m7b5 chord
             this._name += 'm';
-            this.handleExtensionNotes(false);
+            this.handleExtensionNotes(false, false, true);
             this._name += '(b5)'
-        } else { // dim chord with no 7ths
+        } else { // dim chord with major 7th or no 7ths
             this._name += '°';
-            this.handleExtensionNotes(false);
+            this.handleExtensionNotes(false, false, true);
         }
     }
 
@@ -415,7 +414,7 @@ export class Chord {
             MINOR_SIXTH
         } = Interval;
 
-        this._prob = 1.5;
+        this._prob = 4;
         this._intervals.delete(MINOR_SIXTH);
 
         this._name += '+';
