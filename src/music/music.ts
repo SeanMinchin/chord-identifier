@@ -153,7 +153,7 @@ export class Chord {
                 break;
             case(1):
                 const extensionNoteName = labels[0];
-                this._name += extensionNoteName[0] === 'b' || extensionNoteName[0] === '#' ? `add(${extensionNoteName})` : `add${extensionNoteName}`;
+                this._name += ['#', 'b'].includes(extensionNoteName.charAt(0)) ? `add(${extensionNoteName})` : `add${extensionNoteName}`;
                 break;
             }
         }
@@ -247,7 +247,7 @@ export class Chord {
                         break;
                     case(1):
                         let noteName = nextLowestIntervalLabels[0];
-                        noteName = ['#', 'b'].includes(noteName.slice(-1)) ? `(${noteName})` : noteName;
+                        noteName = ['#', 'b'].includes(noteName.charAt(0)) ? `(${noteName})` : noteName;
 
                         this._name += isPowerChord ? ['(', ...noteName, ')'].join('') : noteName;
                         break;
@@ -392,7 +392,7 @@ export class Chord {
             return;
         }
 
-        this._prob = 4;
+        this._prob = 4.1;
         this._intervals.delete(TRITONE);
 
         if(this._intervals.has(MAJOR_SIXTH)) { // dim7 chord
@@ -414,7 +414,7 @@ export class Chord {
             MINOR_SIXTH
         } = Interval;
 
-        this._prob = 4;
+        this._prob = 4.1;
         this._intervals.delete(MINOR_SIXTH);
 
         this._name += '+';
@@ -438,7 +438,7 @@ export class Chord {
 
         if(hasFifth && hasThird) {
             this.handleTriad();
-        } else if(this._intervals.has(MINOR_THIRD) && this._intervals.has(TRITONE)) {
+        } else if(this._intervals.has(MINOR_THIRD) && this._intervals.has(TRITONE) && !this._intervals.has(MAJOR_THIRD)) {
             this.handleDiminished();
         } else if(this._intervals.has(MAJOR_THIRD) && this._intervals.has(MINOR_SIXTH)) {
             this.handleAugmented();

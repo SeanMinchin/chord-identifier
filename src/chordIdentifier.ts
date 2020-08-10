@@ -39,7 +39,7 @@ export const getAllChordsFromNotes = (playedNotesList: Array<Note | string>, not
         }
     }
 
-    const sortChordsAsc = (first: Chord, second: Chord): -1 | 0 | 1 => {
+    const sortChordsByProbAsc = (first: Chord, second: Chord): -1 | 0 | 1 => {
         if(first.prob > second.prob) return -1;
         if(first.prob < second.prob) return 1;
         return 0;
@@ -47,7 +47,7 @@ export const getAllChordsFromNotes = (playedNotesList: Array<Note | string>, not
 
     return potentialChords
         .filter((chord) => chord.prob >= (filterConditionCutoff ?? 0)) // filter through only chords that meet the cutoff probability
-        .sort(sortChordsAsc) // sort chords in ascending order of probability
+        .sort(sortChordsByProbAsc) // sort chords in ascending order of probability
         .map((chord) => chord.toString()) // map to chord names (string format)
         .filter((name, index, chordNameList) => chordNameList.indexOf(name) === index); // filter out duplicate chord names
 }

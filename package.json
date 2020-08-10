@@ -3,18 +3,32 @@
     "description": "Determine possible musical chord(s) from a guitar fretboard or collection of actual notes.",
     "version": "1.0.0",
     "main": "lib/index.js",
+    "types": "lib/index.d.ts",
     "scripts": {
         "build": "tsc --project tsconfig.json",
         "start": "tsc --project tsconfig.json && node lib/index.js"
     },
     "repository": {
-        "type": "git"
+        "type": "git",
+        "url": "https://github.com/SeanMinchin/chord-identifier.git"
     },
-    "keywords": [],
+    "keywords": [
+        "chord",
+        "guitar",
+        "music",
+        "chord identifier",
+        "chord finder",
+        "instrument",
+        "reverse chord identifier",
+        "reverse chord finder"
+    ],
     "author": "Sean Minchin",
     "license": "MIT",
-    "dependencies": {},
-    "devDependencies": {
+    "bugs": {
+        "url": "https://github.com/SeanMinchin/chord-identifier/issues"
+    },
+    "homepage": "https://github.com/SeanMinchin/chord-identifier/blob/master/README.md",
+    "dependencies": {
         "typescript": "^3.9.7"
     }
 }

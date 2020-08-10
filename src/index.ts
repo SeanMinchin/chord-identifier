@@ -8,4 +8,4 @@ export {
     TuningName, StringNotes, guitarTunings, FretNumber, TuningOffset, getNoteFromFret
 };
 
-console.log(getAllChordsFromFretboard(TuningName.Standard, [false, 5, 8, 6, 7, 0]));
+console.log(getAllChordsFromFretboard(TuningName.Standard, [false, 7, 5, 6, 5, 5]));
