@@ -182,7 +182,7 @@ export class Chord {
             [PERFECT_FOURTH, { value: 11, name: '11'}],
             [TRITONE, { value: 11, name: '#11'}],
             [MINOR_SIXTH, { value: 13, name: 'b13'}],
-            [MAJOR_SIXTH, { value: 13, name: '13'}]
+            [MAJOR_SIXTH, isDiminished ? { value: 7, name: '7' } : { value: 13, name: '13'}]
         ]);
 
         type ExtensionNoteInterval = 7 | 9 | 11 | 13;
@@ -214,7 +214,7 @@ export class Chord {
         const sevenths = extensionNotes.get(7) ?? [];
         extensionNotes.delete(7);
         if(sevenths.length !== 0) {
-            this._prob += 0.25;
+            this._prob += 0.05;
             if(isPowerChord) this._name += 'add';
 
             // case: min7 and maj7
@@ -380,11 +380,13 @@ export class Chord {
     handleDiminished(): void {
         const {
             TRITONE,
+            MINOR_SIXTH,
             MAJOR_SIXTH, MINOR_SEVENTH, MAJOR_SEVENTH
         } = Interval;
 
         const dimFifthIsRoot = this._intervals.has(MINOR_SEVENTH) && this._intervals.has(MAJOR_SEVENTH);
         const dimSeventhIsRoot = this._intervals.has(MAJOR_SIXTH) && (this._intervals.has(MINOR_SEVENTH) || this._intervals.has(MAJOR_SEVENTH));
+        const minSixthIsRoot = this._intervals.has(MINOR_SIXTH);
 
         // in either of these cases, we can be sure that the current "potential" root is not the chord's actual root
         if(dimFifthIsRoot || dimSeventhIsRoot) {
@@ -392,18 +394,14 @@ export class Chord {
             return;
         }
 
-        this._prob = 4.1;
+        this._prob = minSixthIsRoot ? 3.35 : 4.1;
         this._intervals.delete(TRITONE);
 
-        if(this._intervals.has(MAJOR_SIXTH)) { // dim7 chord
-            this._intervals.delete(MAJOR_SIXTH);
-            this._name += '°7';
-            this.handleExtensionNotes(false, false, true);
-        } else if(this._intervals.has(MINOR_SEVENTH)) { // m7b5 chord
+        if(this._intervals.has(MINOR_SEVENTH)) { // m7b5 chord
             this._name += 'm';
             this.handleExtensionNotes(false, false, true);
             this._name += '(b5)'
-        } else { // dim chord with major 7th or no 7ths
+        } else { // dim7, dim maj7, or dim chord
             this._name += '°';
             this.handleExtensionNotes(false, false, true);
         }
