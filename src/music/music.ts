@@ -205,8 +205,6 @@ export class Chord {
             }
         });
 
-        console.log(extensionNotes);
-
         // case: no extension notes or sevenths
         if(Array.from(extensionNotes.values()).some((label) => label.length > 0) === false) return;
 
@@ -317,7 +315,7 @@ export class Chord {
         !!susFour && this._intervals.add(susFour);
 
         if(this._intervals.has(MINOR_SECOND) || this._intervals.has(MAJOR_SECOND)) {
-            this._name += this._intervals.has(MINOR_SECOND) ? 'sus2(b2)' : 'sus2';
+            this._name += this._intervals.has(MINOR_SECOND) ? 'sus(b2)' : 'sus2';
         }
 
         if(this._intervals.has(PERFECT_FOURTH) || this._intervals.has(TRITONE)) {

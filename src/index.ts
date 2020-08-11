@@ -7,5 +7,3 @@ export {
     Pitch, Octave, Note, createNoteFromName,
     TuningName, StringNotes, guitarTunings, FretNumber, TuningOffset, getNoteFromFret
 };
-
-console.log(getAllChordsFromFretboard(TuningName.Standard, [false, 7, 5, 6, 5, 5]));

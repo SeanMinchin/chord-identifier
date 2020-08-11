@@ -4,9 +4,15 @@
     "version": "1.0.0",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
+    "files": [
+        "lib/**/*"
+    ],
     "scripts": {
-        "build": "tsc --project tsconfig.json",
-        "start": "tsc --project tsconfig.json && node lib/index.js"
+        "build": "tsc",
+        "test": "tsc --project tsconfig.json && node tests/main.js",
+        "prepare": "npm run build",
+        "version": "npm run format && git add -A src",
+        "postversion": "git push && git push --tags"
     },
     "repository": {
         "type": "git",
@@ -28,7 +34,10 @@
         "url": "https://github.com/SeanMinchin/chord-identifier/issues"
     },
     "homepage": "https://github.com/SeanMinchin/chord-identifier/blob/master/README.md",
-    "dependencies": {
+    "devDependencies": {
         "typescript": "^3.9.7"
+    },
+    "publishConfig": {
+        "registry": "https://npm.pkg.github.com/"
     }
 }
